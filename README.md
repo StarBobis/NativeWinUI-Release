@@ -53,11 +53,24 @@ cmake --build build --config Release
 
 DLL 方式还需把 SDK 的 `bin/NativeWinUI.dll` 放到应用 EXE 同目录。应用窗口和消息循环由宿主工程提供。发布附件不包含框架实现源码、测试源码或示例源码，仅保留接入必需的公开头文件。
 
+使用 `<native_ui/win32_host.h>` 中的 `native_ui::Win32Host`，在窗口线程调用
+`attach(hwnd, model, options)`。先建立 `WidgetModel` 和页面，使用 `on_resize`
+按 DIP 更新页面大小，通过 `on_invoke` 响应按钮。模型更新后调用
+`invalidate()`。宿主负责客户区渲染、输入路由和 UI Automation，应用负责创建
+`HWND`、消息循环及 DPI 感知。保持模型存活至宿主分离或窗口销毁。
+
+用 `on_commit` 接收文本提交（包括 Windows IME）。`bind_collection` 可同步
+列表或表格的滚动和异步数据投影。文件拖入使用 `on_file_drop`，拖出使用
+`drag_files`。这两项通过 Windows OLE 工作，窗口线程使用 STA。系统文字大小
+和触屏键盘默认随 Windows 设置。Gallery 的 Markdown、TextBox 和异步集合
+页面分别演示查找、表单校验和百万行按需加载。
+
 ## 🔢 版本规则
 
 首版为 **0.1.0**，之后只递增最后一位：`0.1.1` → `0.1.2` → ……；Git 标签使用 `v0.1.N`。公开版本不覆盖旧附件，SDK、Gallery 文件版本和 Release 使用同一版本号。版本号、校验值和构建信息可在每次 Release 的清单中查看。
 
 维护者在源码仓库运行 `powershell -File tools/release.ps1 -Publish`，即可自动计算下一版本、构建、打包、验证并发布到本仓库。只运行 `tools/release.ps1` 则仅在本地准备候选产物。
+候选验收需在交互式 Windows 桌面运行，包含框架契约、Gallery 无头与离屏检查、串行实窗检查和两种解包 SDK 的实窗接入。
 
 ## 📄 许可证
 
